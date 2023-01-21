@@ -1,30 +1,35 @@
-import logo from './logo.svg';
+// import logo from './logo.svg';
 import './App.css';
 
-function MyButton() {
-  return (
-    <button><p>I'm a button</p></button>
-  )
+function BlogPost(title, caption, date, previewText) {
+  // some humble thoughts
+  return (<div>
+    <p className="Blog-post-title">
+      {title}
+    </p>
+    <p className="Blog-caption">
+      {caption} &#x2022; {date}
+    </p>
+    <p className="Blog-preview">
+      {previewText}
+    </p>
+  </div>)
 }
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
+      <div className="App-body">
+        <p className="Blog-title">
+          Some Humble Thoughts
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-        <MyButton></MyButton>
-      </header>
+        {BlogPost(
+          "Incredible Title", 
+          "Incredible Caption",
+          "Incredible Date",
+          "Incredible Preview")
+        }
+      </div>
     </div>
   );
 }
