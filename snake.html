@@ -1,0 +1,153 @@
+<html>
+  <body>
+    <div id="grid" tabindex="0"></div>
+  </body>
+  <script>
+    const NUM_ROWS = 21;
+    const NUM_COLS = 21;
+
+    let snakeCoordinates = [[11, 11]];
+    let foodCoordinate = [4, 4];
+    let direction = 0;
+    const directions = [
+      // Up 
+      [20, 0],
+      // Down
+      [1, 0],
+      // Left
+      [0, 20],
+      // Right
+      [0, 1],
+    ];
+
+    document.body.addEventListener('keydown', (e) => {
+      if (e.key == 'ArrowLeft') {
+        direction = 2;
+      } else if (e.key == 'ArrowRight') {
+        direction = 3;
+      } else if (e.key == 'ArrowUp') {
+        direction = 0;
+      } else if (e.key == 'ArrowDown') {
+         direction = 1;
+      }
+    });
+
+    const startGame = () => setInterval(() => {
+      const moveFailure = !moveSnake(direction);
+      if (moveFailure) {
+        clearInterval(gameInterval);
+        renderEndGame('You lose');
+        return;
+      }
+      const isWon = !foodCoordinate;
+      if (isWon) {
+        clearInterval(gameInterval);
+        renderEndGame('You win!')
+        return;
+      }
+      renderGrid(getGameGrid());
+    }, 100)
+    
+    let gameInterval = startGame(); 
+
+    function renderEndGame(message) {
+      const uiGrid = document.getElementById("grid");
+      uiGrid.textContent = '';
+      const winMessage = document.createElement('div');
+      winMessage.textContent = message;
+      const repeatGame = document.createElement('button');
+      repeatGame.textContent = 'Play again'
+      repeatGame.onclick = () => {
+        snakeCoordinates = [[11, 11]];
+        foodCoordinate = [4, 4];
+        direction = 0;
+        gameInterval = startGame();
+      }
+      uiGrid.appendChild(winMessage);
+      uiGrid.appendChild(repeatGame);
+    }
+
+    function createFood() {
+     const grid = getGameGrid(); 
+     const availableCells = [];
+     grid.forEach((row, i) => {
+      row.forEach((cell, j) => {
+       if (!cell) {
+        availableCells.push([i, j]);
+       } 
+      })
+     });
+     if (!availableCells) return null;
+     const randomCell = availableCells[
+        Math.floor(Math.random() * availableCells.length)
+      ];
+     return randomCell;
+    }
+
+    function moveSnake(direction) {
+      const lastCell = snakeCoordinates[snakeCoordinates.length - 1];
+      const moveCell = snakeCoordinates.length > 0 ? snakeCoordinates[0] : lastCell;
+      const newCell = createNewCell(moveCell); 
+      const collision = snakeCoordinates.find(([x, y]) =>
+        x == newCell[0] && y == newCell[1]
+      );
+      if (collision) return false;
+      snakeCoordinates.pop();
+      snakeCoordinates.unshift(newCell);
+      if (newCell[0] == foodCoordinate[0] && newCell[1] == foodCoordinate[1]) {
+        snakeCoordinates.push(lastCell);
+        foodCoordinate = createFood();
+      }
+      return true;
+    }
+
+    function createNewCell(moveCell) {
+      return [(moveCell[0] + directions[direction][0]) % NUM_ROWS, 
+          (moveCell[1] + directions[direction][1])% NUM_COLS]
+    }
+
+    function getFreshGrid() {
+      const virtualGrid = [];
+      for (let i = 0; i < NUM_ROWS; ++i) {
+        virtualGrid.push([]);
+        for (let j = 0; j < NUM_COLS; ++j) {
+          virtualGrid[i].push(0);
+        }
+      } 
+      return virtualGrid;
+    }
+
+    function getGameGrid() {
+      const gameGrid = getFreshGrid();
+      snakeCoordinates.forEach(([x, y]) => {
+       if (x >= 0 && x < gameGrid.length && 
+       y >= 0 && y < gameGrid[0].length) {
+        gameGrid[x][y] = 1;
+       } 
+      });
+      if (foodCoordinate) {
+        gameGrid[foodCoordinate[0]][foodCoordinate[1]] = 2;
+      }
+      return gameGrid;
+    }
+
+    function renderGrid(virtualGrid) {
+      const uiGrid = document.getElementById("grid");
+      uiGrid.textContent = '';
+      virtualGrid.forEach((virtualRow) => {
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.flexDirection = 'row';
+        virtualRow.forEach((virtualCell) => {
+          const node = document.createElement('div');
+          node.style.backgroundColor = virtualCell == 1 ? 'black' :
+          virtualCell == 2 ? 'red' : 'white';
+          node.style.height = 40;
+          node.style.width = 40;
+          row.appendChild(node)
+        })
+        uiGrid.appendChild(row);
+      });
+    }
+  </script>
+</html>
