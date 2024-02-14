@@ -4,7 +4,7 @@ body {
 }
 
 #menu {
-  float: right;
+  float: left;
   margin-top: 30px;
   margin-right: 20px;
   text-align: right;
@@ -35,7 +35,7 @@ body {
   display: block;
   min-width: 0;
   overflow: hidden;
-  width: 200px;
+  width: 25px;
   margin: 0;
   padding: 0;
 }
@@ -46,7 +46,9 @@ body {
   width: 500px;
 }
 
-#content h1, #content h2, #content h3 {
+#content h1,
+#content h2,
+#content h3 {
   font-family: "Myriad Pro", "Helvetica Neue", Helvetica;
   margin: 0;
 }
@@ -55,12 +57,15 @@ body {
   margin-top: 2em;
 }
 
-#content .byline, #content .byline a, #content .note {
+#content .byline,
+#content .byline a,
+#content .note {
   font-size: 10px;
   color: #aaa;
 }
 
-#content p, #content ul {
+#content p,
+#content ul {
   color: #333;
   line-height: 18px;
 }
@@ -95,12 +100,12 @@ body {
   margin-top: 50px;
 }
 
-sup, sub {
+sup,
+sub {
   vertical-align: baseline;
   position: relative;
   top: -0.4em;
 }
-sub { 
-  top: 0.4em; 
+sub {
+  top: 0.4em;
 }
-
