@@ -1,0 +1,209 @@
+<html>
+  <head>
+    <title>Miru Biru</title>
+  </head>
+  <body style="background-color: black">
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        flex: 1;
+        width: 100%;
+        height: 100%;
+      "
+    >
+      <div
+        style="
+          margin-top: auto;
+          margin-bottom: auto;
+          margin-left: auto;
+          margin-right: auto;
+          width: 600px;
+          height: 600px;
+          border: 1px solid white;
+          position: relative;
+        "
+      >
+        <div id="gamebox" tabindex="0"></div>
+      </div>
+    </div>
+    <script>
+      const gamebox = document.getElementById("gamebox");
+      const gameState = new Array(15)
+        .fill(0)
+        .map(() =>
+          new Array(15).fill(0).map(() => ({ type: "empty", occupants: [] }))
+        );
+
+      gameState[0][0] = {
+        type: "empty",
+        occupants: [{ id: 0, role: "villain" }],
+      };
+
+      gameState[14][14] = {
+        type: "empty",
+        occupants: [{ id: 0, role: "user" }],
+      };
+
+      const userCoordinates = [14, 14];
+
+      let dx = 0;
+      let dy = 0;
+
+      document.body.addEventListener("keyup", (e) => {
+        if (
+          (e.key == "ArrowLeft" && dx == -1) ||
+          (e.key == "ArrowRight" && dx == 1)
+        ) {
+          dx = 0;
+        }
+        if (
+          (e.key == "ArrowUp" && dy == -1) ||
+          (e.key == "ArrowDown" && dy == 1)
+        ) {
+          dy = 0;
+        }
+      });
+      document.body.addEventListener("keydown", (e) => {
+        if (e.key == "ArrowLeft") {
+          dx = -1;
+        } else if (e.key == "ArrowRight") {
+          dx = 1;
+        } else if (e.key == "ArrowUp") {
+          dy = -1;
+        } else if (e.key == "ArrowDown") {
+          dy = 1;
+        }
+      });
+
+      let tick = 0;
+
+      const interval = setInterval(() => {
+        tick++;
+
+        const box = document.getElementById("gamebox");
+        box.textContent = "";
+
+        const newCoordinates = [];
+
+        gameState.forEach((row, i) =>
+          row.forEach((cell, j) => {
+            const state = gameState[i][j].occupants.reduce(
+              (t, o) => {
+                t.villain = t.villain || o.role == "villain";
+                t.user = t.user || o.role == "user";
+                return t;
+              },
+              { villain: false, user: false }
+            );
+            const collision = state.villain && state.user;
+            if (collision) {
+              clearInterval(interval);
+              alert("you won!");
+              return;
+            }
+            gameState[i][j].occupants.forEach((occ) => {
+              if (occ.role == "villain") {
+                newCoordinates.push({
+                  coordinate:
+                    dy == 0 && dx == 0
+                      ? [i, j]
+                      : tick % 2
+                      ? [i, j]
+                      : moveVillain(i, j, gameState, row),
+                  data: occ,
+                });
+              } else if (occ.role == "user") {
+                const x = i + dy;
+                const y = j + dx;
+                const newUserCoordinates = [
+                  Math.max(Math.floor(Math.min(x, gameState.length - 1)), 0),
+                  Math.max(Math.floor(Math.min(y, row.length - 1)), 0),
+                ];
+                userCoordinates[0] = newUserCoordinates[0];
+                userCoordinates[1] = newUserCoordinates[1];
+                newCoordinates.push({
+                  coordinate: newUserCoordinates,
+                  data: occ,
+                });
+              }
+            });
+            gameState[i][j].occupants = [];
+          })
+        );
+
+        newCoordinates.forEach(({ coordinate, data }) => {
+          const [x, y] = coordinate;
+          gameState[x][y].occupants.push(data);
+        });
+
+        gameState.forEach((row, i) =>
+          row.forEach((cell, j) => {
+            const isVillain = cell.occupants.some((o) => o.role == "villain");
+            const isUser = cell.occupants.some((o) => o.role == "user");
+            const div = document.createElement("div");
+            if (isUser) {
+              const img = document.createElement("img");
+              img.src = "./cat.png";
+              img.style.width = "100%";
+              img.style.height = "100%";
+              div.appendChild(img);
+            } else if (isVillain) {
+              const point = document.createElement("div");
+              point.style.marginTop = "15px";
+              point.style.marginBottom = "15px";
+              point.style.marginLeft = "15px";
+              point.style.marginRight = "15px";
+              point.style.height = "10px";
+              point.style.width = "10px";
+              point.style.backgroundColor = "red";
+              point.style.borderRadius = "10px";
+              div.appendChild(point);
+            }
+            div.style.position = "absolute";
+            div.style.top = `${i * 40}px`;
+            div.style.left = `${j * 40}px`;
+            div.style.height = "40px";
+            div.style.width = "40px";
+            return box.appendChild(div);
+          })
+        );
+      }, 50);
+
+      function moveVillain(i, j, gameState, row) {
+        const options = [
+          [i - 1, j - 1],
+          [i - 1, j],
+          [i - 1, j + 1],
+          [i, j - 1],
+          [i, j],
+          [i, j + 1],
+          [i + 1, j - 1],
+          [i + 1, j],
+          [i + 1, j + 1],
+        ].sort((a, b) => Math.random() > 0.5);
+
+        const availableOptions = options.filter(
+          ([x, y]) =>
+            x >= 0 &&
+            x < gameState.length &&
+            y >= 0 &&
+            y < row.length &&
+            gameState[x][y].type !== "wall"
+        );
+
+        const chosenOption = availableOptions.reduce((o1, o2) => {
+          const d1 =
+            Math.abs(userCoordinates[0] - o1[0]) +
+            Math.abs(userCoordinates[1] - o1[1]);
+          const d2 =
+            Math.abs(userCoordinates[0] - o2[0]) +
+            Math.abs(userCoordinates[1] - o2[1]);
+          return d1 > d2 ? o1 : o2;
+        });
+
+        return chosenOption;
+      }
+    </script>
+  </body>
+</html>
