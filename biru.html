@@ -108,7 +108,7 @@
                   coordinate:
                     dy == 0 && dx == 0
                       ? [i, j]
-                      : tick % 2
+                      : tick % 3
                       ? [i, j]
                       : moveVillain(i, j, gameState, row),
                   data: occ,
@@ -123,7 +123,7 @@
                 userCoordinates[0] = newUserCoordinates[0];
                 userCoordinates[1] = newUserCoordinates[1];
                 newCoordinates.push({
-                  coordinate: newUserCoordinates,
+                  coordinate: tick % 2 ? [i, j] : newUserCoordinates,
                   data: occ,
                 });
               }
