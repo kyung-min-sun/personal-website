@@ -113,3 +113,56 @@ sub {
 sub {
   top: 0.4em;
 }
+
+#qa-box {
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 12px 14px;
+  margin: 1.5em 0;
+}
+
+#qa-form {
+  display: flex;
+  gap: 6px;
+}
+
+#qa-input {
+  flex: 1;
+  font: inherit;
+  color: #333;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+
+#qa-form button {
+  font: inherit;
+  color: #333;
+  padding: 6px 14px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #fff;
+  cursor: pointer;
+}
+
+#qa-form button:hover {
+  background: #f4f4f4;
+}
+
+.qa-entry {
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  padding: 8px 10px;
+  margin-top: 10px;
+  color: #333;
+  line-height: 18px;
+  overflow-wrap: break-word;
+}
+
+.qa-entry div + div {
+  margin-top: 6px;
+}
+
+.qa-ts {
+  color: #aaa;
+}

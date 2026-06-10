@@ -20,8 +20,22 @@
       <div id="content">
         <p>
           I'm pretty curious about the world. Here are some of the questions
-          that percolate in my mind.
+          that percolate in my mind. You can also ask me yours.
         </p>
+
+        <div id="qa-box">
+          <p class="note notop">i usually respond day of.</p>
+          <form id="qa-form">
+            <input
+              id="qa-input"
+              type="text"
+              maxlength="2000"
+              placeholder="ask me whatever your heart desires. can be anon or u can say ur name"
+            />
+            <button type="submit">ask</button>
+          </form>
+          <div id="qa-feed"></div>
+        </div>
 
         <p>
           <b
@@ -422,5 +436,102 @@
         </p>
       </div>
     </div>
+    <script data-questions-api="https://ask.kyungminsun.com">
+      (function () {
+        var API = document.currentScript.dataset.questionsApi;
+        var feed = document.getElementById("qa-feed");
+        var form = document.getElementById("qa-form");
+        var input = document.getElementById("qa-input");
+
+        var ORDINALS = { 1: "st", 2: "nd", 3: "rd", 21: "st", 22: "nd", 23: "rd", 31: "st" };
+        function fmt(iso) {
+          var parts = new Intl.DateTimeFormat("en-US", {
+            timeZone: "America/Los_Angeles",
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+            timeZoneName: "short",
+          }).formatToParts(new Date(iso));
+          var p = {};
+          parts.forEach(function (x) {
+            p[x.type] = x.value;
+          });
+          var day = p.day + (ORDINALS[+p.day] || "th");
+          return (
+            p.month.toLowerCase() + " " + day + ", " + p.year + ", " +
+            p.hour + ":" + p.minute + p.dayPeriod.toLowerCase() + " " +
+            p.timeZoneName.toLowerCase()
+          );
+        }
+
+        function line(parent, ts, prefix, text) {
+          var div = document.createElement("div");
+          var stamp = document.createElement("span");
+          stamp.className = "qa-ts";
+          stamp.textContent = "[" + fmt(ts) + "] ";
+          div.appendChild(stamp);
+          div.appendChild(document.createTextNode(prefix + ": " + text));
+          parent.appendChild(div);
+        }
+
+        function entryEl(q) {
+          var box = document.createElement("div");
+          box.className = "qa-entry";
+          line(box, q.askedAt, "q", q.question);
+          if (q.answer) line(box, q.answeredAt, "a", q.answer);
+          return box;
+        }
+
+        function notice(text) {
+          feed.textContent = "";
+          var p = document.createElement("p");
+          p.className = "note";
+          p.textContent = text;
+          feed.appendChild(p);
+        }
+
+        function load() {
+          fetch(API + "/api/questions")
+            .then(function (r) {
+              return r.json();
+            })
+            .then(function (data) {
+              feed.textContent = "";
+              data.questions.forEach(function (q) {
+                feed.appendChild(entryEl(q));
+              });
+            })
+            .catch(function () {
+              notice("the question box is napping right now — email me instead.");
+            });
+        }
+
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          var question = input.value.trim();
+          if (!question) return;
+          fetch(API + "/api/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question: question }),
+          })
+            .then(function (r) {
+              return r.json().then(function (data) {
+                if (!r.ok) throw new Error(data.error || "something went wrong");
+                feed.insertBefore(entryEl(data.question), feed.firstChild);
+                input.value = "";
+              });
+            })
+            .catch(function (err) {
+              alert(err.message);
+            });
+        });
+
+        load();
+      })();
+    </script>
   </body>
 </html>

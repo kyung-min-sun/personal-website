@@ -1,0 +1,11 @@
+{
+  "name": "questions-server",
+  "version": "1.0.0",
+  "description": "Tiny server behind the questions box on kyungminsun.com — stores questions and pipes them to email",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "bun server.js",
+    "test": "bun test"
+  }
+}
