@@ -5,10 +5,10 @@ import { join } from "node:path";
 import { createStore } from "./store.js";
 import { createApp } from "./app.js";
 
-function makeServer({ sendEmail = async () => {}, adminToken = "secret" } = {}) {
+function makeServer({ adminToken = "secret" } = {}) {
   const store = createStore(join(mkdtempSync(join(tmpdir(), "questions-")), "questions.json"));
   let ip = "1.2.3.4";
-  const app = createApp({ store, sendEmail, adminToken });
+  const app = createApp({ store, adminToken });
   const server = Bun.serve({ port: 0, fetch: (req) => app(req, ip) });
   return {
     base: `http://localhost:${server.port}`,
@@ -19,8 +19,7 @@ function makeServer({ sendEmail = async () => {}, adminToken = "secret" } = {}) 
 }
 
 test("ask → list → answer round trip", async () => {
-  const emails = [];
-  const { base, close } = makeServer({ sendEmail: async (e) => emails.push(e) });
+  const { base, close } = makeServer();
   try {
     const ask = await fetch(`${base}/api/ask`, {
       method: "POST",
@@ -30,8 +29,6 @@ test("ask → list → answer round trip", async () => {
     expect(ask.status).toBe(201);
     const { question: entry } = await ask.json();
     expect(entry.name).toBe("jamie");
-    expect(emails.length).toBe(1);
-    expect(emails[0].question).toBe("how did you get into freight?");
 
     const list = await (await fetch(`${base}/api/questions`)).json();
     expect(list.questions.length).toBe(1);
@@ -88,25 +85,6 @@ test("answer requires the admin token", async () => {
   }
 });
 
-test("a failing email never loses the question", async () => {
-  const { base, close } = makeServer({
-    sendEmail: async () => {
-      throw new Error("smtp on fire");
-    },
-  });
-  try {
-    const ask = await fetch(`${base}/api/ask`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question: "still there?" }),
-    });
-    expect(ask.status).toBe(201);
-    const list = await (await fetch(`${base}/api/questions`)).json();
-    expect(list.questions.length).toBe(1);
-  } finally {
-    close();
-  }
-});
 
 test("rate limits a chatty ip", async () => {
   const { base, close } = makeServer();

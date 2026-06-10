@@ -3,7 +3,7 @@ const MAX_NAME_LENGTH = 100;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 5;
 
-export function createApp({ store, sendEmail, adminToken, allowedOrigin = "*" }) {
+export function createApp({ store, adminToken, allowedOrigin = "*" }) {
   const hits = new Map(); // ip → [timestamps], pruned per request
 
   function rateLimited(ip) {
@@ -55,10 +55,6 @@ export function createApp({ store, sendEmail, adminToken, allowedOrigin = "*" })
       }
 
       const entry = store.add({ name, question });
-
-      // fire-and-forget: a broken mail pipe should never eat a question
-      sendEmail(entry).catch((err) => console.error("email failed:", err.message));
-
       return json(201, { question: entry });
     }
 
